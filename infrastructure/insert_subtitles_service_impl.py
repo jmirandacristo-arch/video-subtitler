@@ -7,6 +7,7 @@ import os
 import tempfile
 import ffmpeg
 from datetime import timedelta
+import re
 
 #Implements the InsertSubtitlesService interface to provide functionality for inserting subtitles into a video file using ffmpeg. 
 #The insert method takes a Video object, a Subtitles object, a SubtitleStyle object, and an output path, converts the subtitles into SRT format, 
@@ -17,7 +18,7 @@ def hex_to_ass(hex_color):
     hex_color = hex_color.lstrip('#')
     r, g, b = hex_color[0:2], hex_color[2:4], hex_color[4:6]
     return f"{b}{g}{r}"
-import re
+
 
 def rgba_to_hex(rgba_str):
     if not rgba_str:

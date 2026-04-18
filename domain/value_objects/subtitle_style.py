@@ -15,8 +15,8 @@ class Position(Enum):
 class SubtitleStyle:
     font_size: int = 24
     font_family: str = "Arial"
-    font_color: str = "#FFFFFF"  # Blanco por defecto
-    background_color: Optional[str] = None  # Sin fondo por defecto
-    position: Position = Position.BOTTOM  # Posición del subtítulo (bottom, top, etc.)
-    line_spacing: int = 4  # Espaciado entre líneas
-    shadow: bool = True  # Sombra para mejorar la legibilidad
+    font_color: str = "#FFFFFF"  
+    background_color: Optional[str] = None  
+    position: Position = Position.BOTTOM  
+    line_spacing: int = 4  
+    shadow: bool = True 
