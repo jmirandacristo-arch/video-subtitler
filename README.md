@@ -11,11 +11,10 @@ A Python tool that automatically transcribes, translates, and burns subtitles in
 
 ## Tech Stack
 - Python
-- FastAPI
 - Whisper (faster-whisper)
 - ffmpeg-python
 - Gradio
-- SQLAlchemy
+- Google Translate (deep-translator)
 
 ## How to run
 ```bash
