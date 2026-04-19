@@ -3,6 +3,9 @@ from domain.entities.video import Video
 import os
 import subprocess
 import ffmpeg
+import logging
+
+logger = logging.getLogger(__name__)
 
 #Implements the ExtractAudioService interface to provide functionality for extracting audio from a video file using ffmpeg. 
 #The extract method takes a Video object and an output path, extracts the audio from the video, saves it as an mp3 file in the specified output path, 
@@ -18,6 +21,10 @@ class ExtractAudioServiceImpl(ExtractAudioService):
             ffmpeg.output(input_video.audio, audio_output).run(overwrite_output=True)
             video.audio_path = audio_output
             return video
-        except Exception as e:
-            print(f"Error extracting audio: {e}")
-            
+        except FileNotFoundError as e:
+            logger.error(f"Video file not found: {e}")
+            raise
+        
+        except ffmpeg.Error as e:
+            logger.error(f"FFmpeg error: {e.stderr}")
+            raise

@@ -20,44 +20,50 @@ from infrastructure.insert_subtitles_service_impl import InsertSubtitlesServiceI
 
 
 def extract_audio(video):
-    video = Video(source_path=video, audio_path=None, transcript=None, subtitles=None)
-    extract_audio_service = ExtractAudioServiceImpl()
-    extract_audio = ExtractAudio(extract_audio_service)
-    audio = extract_audio.execute(video, "output")
-
-    transcribe_audio_service = TranscribeAudioServiceImpl()
-    transcribe_audio = TranscribeAudio(transcribe_audio_service)
-    transcription = transcribe_audio.execute(audio)
-
-    return "\n".join([txt.text for txt in transcription.segments]), transcription.segments
+    try:
+        video = Video(source_path=video, audio_path=None, transcript=None, subtitles=None)
+        extract_audio_service = ExtractAudioServiceImpl()
+        extract_audio = ExtractAudio(extract_audio_service)
+        audio = extract_audio.execute(video, "output")
+    
+        transcribe_audio_service = TranscribeAudioServiceImpl()
+        transcribe_audio = TranscribeAudio(transcribe_audio_service)
+        transcription = transcribe_audio.execute(audio)
+    
+        return "\n".join([txt.text for txt in transcription.segments]), transcription.segments
+    except Exception as e:
+        raise gr.Error(f"Error processing video: {str(e)}")
 
     
 def insert_subtitles(video, segments, language, font_size, font_family, background_color, background_color_value, font_color, position, line_spacing):
-    video = Video(source_path=video, audio_path=None, transcript=None, subtitles=None)
-    entity_transcript = Transcript(language=None, segments=segments)
-    translate_service = TranslateServiceImpl()
-    translate = Translate(translate_service)
-    translated_subtitles = translate.execute(entity_transcript, language.lower())
-    entity_substyles = SubtitleStyle(
-        font_size=font_size,
-        font_family=font_family,
-        background_color=background_color_value if background_color else None,
-        font_color=font_color,
-        position=position,
-        line_spacing=line_spacing if line_spacing else 1.2,
-        shadow=True
-    )
-
-    entity_subtitles = Subtitles(
-    language_output=language,
-    segments=translated_subtitles.segments
-    )
-
-    insert_subtitles_service = InsertSubtitlesServiceImpl()
-    insert_subtitles = InsertSubtitles(insert_subtitles_service)
-    output_video = insert_subtitles.execute(video, entity_subtitles, entity_substyles, "output")
-
-    return output_video.source_path
+    try:
+        video = Video(source_path=video, audio_path=None, transcript=None, subtitles=None)
+        entity_transcript = Transcript(language=None, segments=segments)
+        translate_service = TranslateServiceImpl()
+        translate = Translate(translate_service)
+        translated_subtitles = translate.execute(entity_transcript, language.lower())
+        entity_substyles = SubtitleStyle(
+            font_size=font_size,
+            font_family=font_family,
+            background_color=background_color_value if background_color else None,
+            font_color=font_color,
+            position=position,
+            line_spacing=line_spacing if line_spacing else 1.2,
+            shadow=True
+        )
+    
+        entity_subtitles = Subtitles(
+        language_output=language,
+        segments=translated_subtitles.segments
+        )
+    
+        insert_subtitles_service = InsertSubtitlesServiceImpl()
+        insert_subtitles = InsertSubtitles(insert_subtitles_service)
+        output_video = insert_subtitles.execute(video, entity_subtitles, entity_substyles, "output")
+    
+        return output_video.source_path 
+    except Exception as e:
+        raise gr.Error(f"Error inserting subtitles: {str(e)}")
 
     
 
