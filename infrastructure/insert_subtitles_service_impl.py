@@ -33,10 +33,11 @@ def rgba_to_hex(rgba_str):
 
 class InsertSubtitlesServiceImpl(InsertSubtitlesService):
      def insert(self, video: Video, subtitles: Subtitles, subtitles_style: SubtitleStyle, output_path: str) -> Video:
-            subtitles_list = []
-            for segment in subtitles.segments:
-                subtitles_list.append(srt.Subtitle(index=len(subtitles_list)+1, start=timedelta(seconds=segment.start), end=timedelta(seconds=segment.end), content=segment.text))
             
+            subtitles_list = [
+                 srt.Subtitle(index = i+1, start=timedelta(seconds=segment.start), end=timedelta(seconds=segment.end), content=segment.text)
+                 for i, segment in enumerate(subtitles.segments)
+            ]
             subtitles_srt = srt.compose(subtitles_list)
             
 
