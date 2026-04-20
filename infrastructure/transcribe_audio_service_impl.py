@@ -46,6 +46,8 @@ class TranscribeAudioServiceImpl(TranscribeAudioService):
         
         segments = []
         for s in whisper_segments:
+            if not s.text.strip():
+                continue    
             processed_segments = word_to_segments(s.words, max_chars=40, max_lines=2)
             segments.extend(processed_segments)
 
