@@ -2,6 +2,11 @@ import sys
 import os
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
+import logging
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+)
 import gradio as gr
 from domain.entities.transcript import Transcript
 from domain.entities.subtitles import Subtitles

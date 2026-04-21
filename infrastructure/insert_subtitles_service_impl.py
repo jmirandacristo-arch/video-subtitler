@@ -8,6 +8,9 @@ import tempfile
 import ffmpeg
 from datetime import timedelta
 import re
+import logging
+
+logger = logging.getLogger(__name__)
 
 #Implements the InsertSubtitlesService interface to provide functionality for inserting subtitles into a video file using ffmpeg. 
 #The insert method takes a Video object, a Subtitles object, a SubtitleStyle object, and an output path, converts the subtitles into SRT format, 
@@ -33,50 +36,53 @@ def rgba_to_hex(rgba_str):
 
 class InsertSubtitlesServiceImpl(InsertSubtitlesService):
      def insert(self, video: Video, subtitles: Subtitles, subtitles_style: SubtitleStyle, output_path: str) -> Video:
-            
-            subtitles_list = [
-                 srt.Subtitle(index = i+1, start=timedelta(seconds=segment.start), end=timedelta(seconds=segment.end), content=segment.text)
-                 for i, segment in enumerate(subtitles.segments)
-            ]
-            subtitles_srt = srt.compose(subtitles_list)
-            
-
-            with tempfile.NamedTemporaryFile(mode='w+t',encoding='utf-8', delete=False, suffix='.srt') as subtitles_temp:
+            try:
+                subtitles_list = [
+                     srt.Subtitle(index = i+1, start=timedelta(seconds=segment.start), end=timedelta(seconds=segment.end), content=segment.text)
+                     for i, segment in enumerate(subtitles.segments)
+                ]
+                subtitles_srt = srt.compose(subtitles_list)
                 
-                subtitles_temp.write(subtitles_srt)
-                temp_path = subtitles_temp.name
-                temp_path_escaped = temp_path.replace("\\", "/").replace("C:","C\\:")
-            os.makedirs(output_path, exist_ok=True)
-            output_file = os.path.join(output_path, f"{os.path.splitext(os.path.basename(video.source_path))[0]}_subtitled.mp4")
-
-           
-
-            probe = ffmpeg.probe(video.source_path)
-            video_stream = next(stream for stream in probe["streams"] if stream["codec_type"] == "video")
-            width = int(video_stream["width"])
-            height = int(video_stream["height"])
-            base_dim = min(width, height)
-            font_size_small = max(6,int(base_dim * 0.015))
-            font_size_medium = max(8,int(base_dim * 0.020))
-            font_size_large = max(10,int(base_dim * 0.025))
-
-            
-
-            position_map = {"Bottom": 2, "Top": 8, "Middle": 5}
-            font_size_map = {"Small": font_size_small, "Medium": font_size_medium, "Large": font_size_large}
-            vf_filter = (
-                    f"subtitles='{temp_path_escaped}':force_style="
-                    f"'FontSize={font_size_map.get(subtitles_style.font_size, 24)},"
-                    f"FontName={subtitles_style.font_family},"
-                    f"BackColour=&H{hex_to_ass(rgba_to_hex(subtitles_style.background_color)) if subtitles_style.background_color else '00000000'},"
-                    f"PrimaryColour=&H{hex_to_ass(rgba_to_hex(subtitles_style.font_color))},"
-                    f"Alignment={position_map.get(subtitles_style.position, 2)},"
-                    f"LineSpacing={subtitles_style.line_spacing},"
-                    f"Shadow={1 if subtitles_style.shadow else 0}'"
-            )
-                       
-            ffmpeg.input(video.source_path).output(output_file, vf=vf_filter, vcodec="libx264", acodec="aac", strict="-2").run(overwrite_output=True)
-            video.source_path = output_file
-            os.remove(temp_path)
     
-            return video
+                with tempfile.NamedTemporaryFile(mode='w+t',encoding='utf-8', delete=False, suffix='.srt') as subtitles_temp:
+                    
+                    subtitles_temp.write(subtitles_srt)
+                    temp_path = subtitles_temp.name
+                    temp_path_escaped = temp_path.replace("\\", "/").replace("C:","C\\:")
+                os.makedirs(output_path, exist_ok=True)
+                output_file = os.path.join(output_path, f"{os.path.splitext(os.path.basename(video.source_path))[0]}_subtitled.mp4")
+    
+               
+    
+                probe = ffmpeg.probe(video.source_path)
+                video_stream = next(stream for stream in probe["streams"] if stream["codec_type"] == "video")
+                width = int(video_stream["width"])
+                height = int(video_stream["height"])
+                base_dim = min(width, height)
+                font_size_small = max(6,int(base_dim * 0.015))
+                font_size_medium = max(8,int(base_dim * 0.020))
+                font_size_large = max(10,int(base_dim * 0.025))
+    
+                
+    
+                position_map = {"Bottom": 2, "Top": 8, "Middle": 5}
+                font_size_map = {"Small": font_size_small, "Medium": font_size_medium, "Large": font_size_large}
+                vf_filter = (
+                        f"subtitles='{temp_path_escaped}':force_style="
+                        f"'FontSize={font_size_map.get(subtitles_style.font_size, 24)},"
+                        f"FontName={subtitles_style.font_family},"
+                        f"BackColour=&H{hex_to_ass(rgba_to_hex(subtitles_style.background_color)) if subtitles_style.background_color else '00000000'},"
+                        f"PrimaryColour=&H{hex_to_ass(rgba_to_hex(subtitles_style.font_color))},"
+                        f"Alignment={position_map.get(subtitles_style.position, 2)},"
+                        f"LineSpacing={subtitles_style.line_spacing},"
+                        f"Shadow={1 if subtitles_style.shadow else 0}'"
+                )
+                           
+                ffmpeg.input(video.source_path).output(output_file, vf=vf_filter, vcodec="libx264", acodec="aac", strict="-2").run(overwrite_output=True)
+                video.source_path = output_file
+                os.remove(temp_path)
+        
+                return video
+            except Exception as e:
+                logger.error(f"Error inserting subtitles: {str(e)}")
+                raise
